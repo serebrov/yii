@@ -158,6 +158,18 @@ class CMysqlTest extends CTestCase
 		$c=$builder->createCountCommand($table,new CDbCriteria);
 		$this->assertEquals(5,$c->queryScalar());
 
+		// test for delete with joins
+		$c=$builder->createInsertCommand($table,array('title'=>'new post delete','create_time'=>'2000-01-01','author_id'=>1,'content'=>'test content'));
+		$c->execute();
+		$c=$builder->createDeleteCommand($table,new CDbCriteria(array(
+				'condition'=>'u.`username`=:username',
+				'join'=>'JOIN `users` u ON `author_id`=u.`id`',
+				'params'=>array(':username'=>'user1'))));
+		//$this->assertEquals('DELETE FROM `posts` WHERE id=:id',$c->text);
+		$c->execute();
+		$c=$builder->createCountCommand($table,new CDbCriteria);
+		$this->assertEquals(5,$c->queryScalar());
+
 		$c=$builder->createFindCommand($table,new CDbCriteria(array(
 			'select'=>'id, title',
 			'condition'=>'id=:id',
