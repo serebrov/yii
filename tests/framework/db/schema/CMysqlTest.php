@@ -162,10 +162,10 @@ class CMysqlTest extends CTestCase
 		$c=$builder->createInsertCommand($table,array('title'=>'new post delete','create_time'=>'2000-01-01','author_id'=>1,'content'=>'test content'));
 		$c->execute();
 		$c=$builder->createDeleteCommand($table,new CDbCriteria(array(
-				'condition'=>'u.`username`=:username',
+				'condition'=>'u.`username`=:username and `posts`.`title`=:title',
 				'join'=>'JOIN `users` u ON `author_id`=u.`id`',
-				'params'=>array(':username'=>'user1'))));
-		//$this->assertEquals('DELETE FROM `posts` WHERE id=:id',$c->text);
+				'params'=>array(':username'=>'user1', ':title'=>'new post delete'))));
+        $this->assertEquals('DELETE `posts` FROM `posts` JOIN `users` u ON `author_id`=u.`id` WHERE u.`username`=:username and `posts`.`title`=:title',$c->text);
 		$c->execute();
 		$c=$builder->createCountCommand($table,new CDbCriteria);
 		$this->assertEquals(5,$c->queryScalar());
@@ -191,7 +191,7 @@ class CMysqlTest extends CTestCase
 			'condition'=>'id=:id',
 			'params'=>array('id'=>5))));
 		$this->assertEquals('new post 5',$c->queryScalar());
-		
+
 		$c=$builder->createSqlCommand('SELECT title FROM posts WHERE id=:id',array(':id'=>3));
 		$this->assertEquals('post 3',$c->queryScalar());
 
@@ -212,7 +212,7 @@ class CMysqlTest extends CTestCase
 				'condition'=>'id=:id',
 				'params'=>array('id'=>1))));
 		$this->assertEquals('new post 1',$c->queryScalar());
-		
+
 		$c=$builder->createUpdateCounterCommand($table,array('author_id'=>-1),new CDbCriteria(array(
 				'condition'=>'u.`username`="user2"',
 				'join'=>'JOIN `users` u ON `author_id`=u.`id`')));
@@ -220,7 +220,7 @@ class CMysqlTest extends CTestCase
 		$c->execute();
 		$c=$builder->createSqlCommand('SELECT author_id FROM posts WHERE id=2');
 		$this->assertEquals(1,$c->queryScalar());
-		
+
 		// test bind by position
 		$c=$builder->createFindCommand($table,new CDbCriteria(array(
 			'select'=>'title',
